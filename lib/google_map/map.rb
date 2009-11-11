@@ -7,6 +7,7 @@ module GoogleMap
       :overlays,
       :controls,
       :inject_on_load,
+      :load_function,
       :zoom,
       :center,
       :double_click_zoom,
@@ -24,6 +25,7 @@ module GoogleMap
       self.double_click_zoom = true
       self.continuous_zoom = false
       self.scroll_wheel_zoom = false
+      self.load_function = 'window.onload'
       options.each_pair { |key, value| send("#{key}=", value) }
     end
 
@@ -85,12 +87,13 @@ module GoogleMap
       js << "  }"
       js << "}"
 
-      # Load the map on window load preserving anything already on window.onload.
-      js << "if (typeof window.onload != 'function') {"
-      js << "  window.onload = initialize_google_map_#{dom_id};"
+      # Load the map on window load preserving anything already defined in
+      # the custom load_function (defaults to 'window.onload').
+      js << "if (typeof #{load_function} != 'function') {"
+      js << "  #{load_function} = initialize_google_map_#{dom_id};"
       js << "} else {"
-      js << "  old_before_google_map_#{dom_id} = window.onload;"
-      js << "  window.onload = function() {" 
+      js << "  old_before_google_map_#{dom_id} = #{load_function};"
+      js << "  #{load_function} = function() {" 
       js << "    old_before_google_map_#{dom_id}();"
       js << "    initialize_google_map_#{dom_id}();"
       js << "  }"
